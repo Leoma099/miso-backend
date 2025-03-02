@@ -14,13 +14,12 @@ class CreateEquipmentTable extends Migration
     public function up()
     {
         Schema::create('equipment', function (Blueprint $table) {
-            $table->id();
-            $table->string('equipment_type'); // Monitor, Mouse, Printer, etc.
-            $table->string('brand'); // Dell, HP, Samsung, etc.
+            $table->bigIncrements('id');
+            $table->string('type');
+            $table->string('brand');
             $table->string('model');
-            $table->enum('condition', ['1', '2', '3']);
-            $table->enum('availability', ['1', '2']);
-            $table->enum('status', ['1', '2']);
+            $table->tinyInteger('condition')->default('0');
+            $table->tinyInteger('availability')->default('0');
             $table->date('registered_date');
             $table->timestamps();
         });

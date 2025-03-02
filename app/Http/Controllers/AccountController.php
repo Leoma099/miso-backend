@@ -17,7 +17,7 @@ class AccountController extends Controller
             $search = $request->search;
     
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%$search%");
+                $q->where('full_name', 'LIKE', "%$search%");
             });
         }
     
@@ -31,30 +31,36 @@ class AccountController extends Controller
     {
         // Validate incoming request data
         $request->validate([
-            'name' => 'required',
+            'full_name' => 'required',
             'email' => 'required|email|unique:accounts',
             'address' => 'required',
             'mobile_number' => 'required',
+            'id_number' => 'required',
+            'position' => 'required',
+            'office_name' => 'required',
+            'office_address' => 'required',
             'username' => 'required|unique:users',
             'password' => 'required|min:6',
-            'role' => 'required|in:1,2', // 1 => Admin, 2 => User
         ]);
 
          // Create the user first
          $user = User::create([
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'locked' => 0, // Default is Active (0)
+            'role' => $request->role,
         ]);
 
         // Create the account and link it to the user
         $account = Account::create([
             'user_id' => $user->id,
-            'name' => $request->name,
+            'full_name' => $request->full_name,
             'email' => $request->email,
             'address' => $request->address,
+            'id_number' => $request->id_number,
+            'office_name' => $request->office_name,
+            'office_address' => $request->office_address,
             'mobile_number' => $request->mobile_number,
-            'role' => $request->role,
+            'position' => $request->position,
         ]);
 
         return response()->json([

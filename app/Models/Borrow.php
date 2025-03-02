@@ -9,27 +9,29 @@ class Borrow extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id', 'equipment_id', 'condition', 'status', 'date_borrowed', 'date_returned'
-    ];
+    protected $fillable =
+        [
+            'account_id',
+            'equipment_id',
+            'full_name',
+            'office_name',
+            'office_address',
+            'type',
+            'position',
+            'mobile_number',
+            'purpose',
+            'status',
+            'date_borrow',
+            'date_return'
+        ];
 
-    public function user()
+    public function Account()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Account::class, 'account_id', 'id');
     }
 
     public function equipment()
     {
         return $this->belongsTo(Equipment::class, 'equipment_id', 'id');
-    }
-
-    public function getBorrowerNameAttribute()
-    {
-        return $this->user ? $this->user->name : 'Unknown';
-    }
-
-    public function getEquipmentTypeAttribute()
-    {
-        return $this->equipment ? $this->equipment->type : 'Unknown';
     }
 };

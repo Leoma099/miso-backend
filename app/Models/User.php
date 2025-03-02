@@ -11,12 +11,17 @@ class User extends Authenticatable // Change from Model to Authenticatable
 {
     use HasFactory, HasApiTokens;
 
-    protected $fillable = ['username', 'password'];
+    protected $fillable =
+        [
+            'username',
+            'password',
+            'role',
+        ];
 
     protected $hidden = ['password'];
 
     public function account()
     {
-        return $this->hasOne(Account::class, 'user_id', 'id');
+        return $this->hasOne(Account::class, 'user_id');
     }
 }

@@ -11,30 +11,36 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        // Validate incoming request
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('username', $request->username)
-            ->with('account') // Fetch account details automatically
-            ->first();
+        $user = User::where('username', $request->username)->first();
 
-            if (!$user) {
-                return response()->json(['error' => 'User not found'], 404);
-            }
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
 
-            \Log::info('User found:', ['user' => $user]);
+        $token = $user->createToken('eMISO-App-Token')->plainTextToken;
 
-            return response()->json([
-                'token' => $user->createToken('YourAppName')->plainTextToken,
-                'id'    => $user->id,
-                'name'  => optional($user->account)->name,
-                'role'  => optional($user->account)->role,
-                'account' => $user->account, // Ensure it returns full account details
-            ], 200);
+        return response()->json([
+            'token' => $token,
+            'id' => $user->id,
+            'full_name' => optional($user->account)->full_name,
+            'id_number' => optional($user->account)->id_number,
+            'office_name' => optional($user->account)->office_name,
+            'office_address' => optional($user->account)->office_address,
+            'mobile_number' => optional($user->account)->mobile_number,
+            'position' => optional($user->account)->position,
+            'role' => $user->role,
+            'account' => $user->account ? ['id' => $user->account->id] : null, // Avoid null errors
+        ], 200);
+    }
 
-        return response()->json(['error' => 'Unauthorized'], 401);
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(['message' => 'Logged out successfully'], 200);
     }
 };

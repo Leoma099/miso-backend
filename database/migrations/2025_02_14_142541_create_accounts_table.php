@@ -14,13 +14,16 @@ class CreateAccountsTable extends Migration
     public function up()
     {
         Schema::create('accounts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users');
-            $table->string('name');
+            $table->bigIncrements('id');
+            $table->bigInteger('user_id');
+            $table->string('full_name');
             $table->text('address')->nullable();
             $table->string('email')->unique();
             $table->string('mobile_number')->nullable();
-            $table->enum('role', ['1', '2'])->default('2');
+            $table->string('id_number');
+            $table->string('position');
+            $table->string('office_name');
+            $table->string('office_address');
             $table->timestamps();
         });
     }

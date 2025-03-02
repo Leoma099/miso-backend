@@ -16,9 +16,9 @@ class EquipmentController extends Controller
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
-                $q->where('equipment_type', 'LIKE', "%$search%")
+                $q->where('type', 'LIKE', "%$search%")
                 ->orWhere('brand', 'LIKE', "%$search%")
-                ->orWhere('model', 'LIKE', "%$search%");
+                ->orWhere('model', 'LIKE', "%$search%");                                                                                                     
             });
         }
 
@@ -31,12 +31,11 @@ class EquipmentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'equipment_type' => 'required|string',
+            'type' => 'required|string',
             'brand' => 'required|string',
             'model' => 'required|string',
             'condition' => 'required|integer',
             'availability' => 'required|integer',
-            'status' => 'required|integer',
             'registered_date' => 'required|date',
         ]);
     
@@ -48,10 +47,12 @@ class EquipmentController extends Controller
     // Show specific equipment
     public function show($id)
     {
-        $equipment = Equipment::findOrFail($id);
+        $equipment = Equipment::find($id);
+
         if (!$equipment) {
-            return response()->json(['message' => 'Equipment not found'], 404);
+            return response()->json(['error' => 'Equipment not found'], 404);
         }
+
         return response()->json($equipment);
     }
 
@@ -73,5 +74,19 @@ class EquipmentController extends Controller
 
         $equipment->delete();
         return response()->json(["message" => "Deleted successfully"], 200);
+    }
+
+    // Function to get equipment availability statistics
+    public function getAvailabilityStats()
+    {
+        // Count the number of available equipment (status = 1) and not available equipment (status = 2)
+        $available = Equipment::where('availability', 1)->count();
+        $notAvailable = Equipment::where('availability', 2)->count();
+
+        // Return the data in a response
+        return response()->json([
+            'available' => $available,
+            'notAvailable' => $notAvailable
+        ]);
     }
 }

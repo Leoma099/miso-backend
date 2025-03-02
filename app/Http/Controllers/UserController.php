@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -28,14 +29,15 @@ class UserController extends Controller
         return response()->json($user);
     }
 
-    public function show(User $user)
+    public function show($id)
     {
-        return response()->json($user->load('account'));
+        $user = User::with('account')->find($id);
+        return response()->json($user);
     }
 
     public function update(Request $request, User $user)
     {
-        $user->update($request->only(['username', 'password', 'locked']));
+        $user->update($request->only(['username', 'password', 'role']));
         return response()->json($user);
     }
 
@@ -45,4 +47,3 @@ class UserController extends Controller
         return response()->json(['message' => 'User deleted successfully']);
     }
 }
-
