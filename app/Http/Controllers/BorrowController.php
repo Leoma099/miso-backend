@@ -57,7 +57,10 @@ class BorrowController extends Controller
         $request->validate([
             'equipment_id' => 'required|exists:equipment,id',
             'full_name' => 'required',
+            'id_number' => 'required',
             'type' => 'required',
+            'brand' => 'required',
+            'model' => 'required',
             'office_name' => 'required',
             'office_address' => 'required',
             'position' => 'required',
@@ -70,7 +73,10 @@ class BorrowController extends Controller
             'account_id' => $user->account->id,
             'equipment_id' => $request->equipment_id, // FIXED LINE
             'full_name' => $request->full_name,
+            'id_number' => $request->id_number,
             'type' => $request->type,
+            'model' => $request->model,
+            'brand' => $request->brand,
             'office_name' => $request->office_name,
             'office_address' => $request->office_address,
             'position' => $request->position,
@@ -94,9 +100,28 @@ class BorrowController extends Controller
     // Admin updates borrow status (approve/reject)
     public function update(Request $request, $id)
     {
+        // Find the existing borrow record
         $borrow = Borrow::findOrFail($id);
-        $borrow->update(['status' => $request->status]); // approved, rejected, returned
-        return response()->json(['message' => 'Borrow status updated']);
+    
+        // Update the borrow record
+        $borrow->update([
+            'equipment_id' => $request->equipment_id, // FIXED LINE
+            'full_name' => $request->full_name,
+            'id_number' => $request->id_number,
+            'type' => $request->type,
+            'model' => $request->model,
+            'brand' => $request->brand,
+            'office_name' => $request->office_name,
+            'office_address' => $request->office_address,
+            'position' => $request->position,
+            'mobile_number' => $request->mobile_number,
+            'purpose' => $request->purpose,
+            'status' => $request->status,
+            'date_borrow' => $request->date_borrow,
+            'date_return' => $request->date_return,
+        ]);
+    
+        return response()->json(['message' => 'Borrow updated successfully']);
     }
 
     // Admin deletes a borrow record

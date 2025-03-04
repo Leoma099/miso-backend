@@ -18,8 +18,11 @@ class CreateEquipmentTable extends Migration
             $table->string('type');
             $table->string('brand');
             $table->string('model');
-            $table->tinyInteger('condition')->default('0');
-            $table->tinyInteger('availability')->default('0');
+            $table->longText('photo')->nullable();
+            $table->string('property_number');
+            $table->string('serial_number');
+            $table->tinyInteger('condition');
+            $table->tinyInteger('availability');
             $table->date('registered_date');
             $table->timestamps();
         });

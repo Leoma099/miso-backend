@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Equipment;
+use Illuminate\Support\Facades\Storage;
 
 class EquipmentController extends Controller
 {
@@ -18,7 +19,8 @@ class EquipmentController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('type', 'LIKE', "%$search%")
                 ->orWhere('brand', 'LIKE', "%$search%")
-                ->orWhere('model', 'LIKE', "%$search%");                                                                                                     
+                ->orWhere('model', 'LIKE', "%$search%")
+                ->orWhere('property_number', 'LIKE', "%$search%");                                                                                                 
             });
         }
 
@@ -37,12 +39,32 @@ class EquipmentController extends Controller
             'condition' => 'required|integer',
             'availability' => 'required|integer',
             'registered_date' => 'required|date',
+            'property_number' => 'required|string',
+            'serial_number' => 'required|string',
+            'photo' => 'nullable|image|max:2048',
         ]);
     
-        $equipment = Equipment::create($validated);
+        // ✅ Store photo before inserting data
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('uploads/photos', 'public');
+        }
+    
+        // ✅ Now store equipment
+        $equipment = Equipment::create([
+            'property_number' => $request->property_number,
+            'serial_number' => $request->serial_number,
+            'type' => $request->type,
+            'brand' => $request->brand,
+            'model' => $request->model,
+            'condition' => $request->condition,
+            'availability' => $request->availability,
+            'registered_date' => $request->registered_date,
+            'photo' => $photoPath, // ✅ Now assigned correctly
+        ]);
     
         return response()->json(['message' => 'Equipment created successfully!', 'data' => $equipment], 201);
-    }
+    }    
 
     // Show specific equipment
     public function show($id)
@@ -60,11 +82,39 @@ class EquipmentController extends Controller
     public function update(Request $request, $id)
     {
         $equipment = Equipment::findOrFail($id);
-        if (!$equipment) return response()->json(["message" => "Not Found"], 404);
-
-        $equipment->update($request->all());
-        return response()->json($equipment, 200);
-    }
+    
+        if (!$equipment) {
+            return response()->json(["message" => "Not Found"], 404);
+        }
+    
+        // Handle File Upload if a new photo is uploaded
+        if ($request->hasFile('photo')) {
+            // Delete old photo if it exists
+            if ($equipment->photo) {
+                Storage::disk('public')->delete($equipment->photo);
+            }
+            // Store new photo
+            $photoPath = $request->file('photo')->store('uploads/photos', 'public');
+        } else {
+            // Keep existing photo if no new one is uploaded
+            $photoPath = $equipment->photo;
+        }
+    
+        // Update Equipment
+        $equipment->update([
+            'property_number' => $request->property_number,
+            'serial_number' => $request->serial_number,
+            'type' => $request->type,
+            'brand' => $request->brand,
+            'model' => $request->model,
+            'condition' => $request->condition,
+            'availability' => $request->availability,
+            'registered_date' => $request->registered_date,
+            'photo' => $photoPath,
+        ]);
+    
+        return response()->json(["message" => "Updated successfully", "data" => $equipment], 200);
+    }    
 
     // Admin: Delete Equipment
     public function destroy($id)

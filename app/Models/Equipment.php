@@ -16,5 +16,8 @@ class Equipment extends Model
         'condition',
         'availability',
         'registered_date',
+        'photo',
+        'property_number',
+        'serial_number',
     ];
 }

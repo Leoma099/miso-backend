@@ -20,7 +20,6 @@ use App\Http\Controllers\NotificationController;
 |
 */
 
-Route::get('/user', [UserController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/equipment', [EquipmentController::class, 'index']);
