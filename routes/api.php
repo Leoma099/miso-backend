@@ -61,4 +61,3 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Login route (fixed with name)
 Route::post('login', [AuthController::class, 'login'])->name('login');
-
