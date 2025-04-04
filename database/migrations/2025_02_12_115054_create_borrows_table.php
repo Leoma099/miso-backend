@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->string('type');
             $table->string('brand');
             $table->string('model');
+            $table->string('property_number');
             $table->string('position');
             $table->string('mobile_number');
             $table->tinyInteger('status');

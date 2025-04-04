@@ -20,6 +20,7 @@ class Borrow extends Model
             'type',
             'brand',
             'model',
+            'property_number',
             'equipment',
             'position',
             'mobile_number',
@@ -37,5 +38,10 @@ class Borrow extends Model
     public function equipment()
     {
         return $this->belongsTo(Equipment::class, 'equipment_id', 'id');
+    }
+
+    public function BorrowEquipmentCreator()
+    {
+        return $this->belongsTo(Account::class, 'account_id');
     }
 };

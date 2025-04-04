@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\Equipment;
+use App\Models\BorrowNotification;
 use Illuminate\Support\Facades\Storage;
 use App\Imports\EquipmentImport;
 use App\Exports\EquipmentExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class EquipmentController extends Controller
 {
@@ -35,6 +39,24 @@ class EquipmentController extends Controller
     // User: Borrow Equipment (Create Request)
     public function store(Request $request)
     {
+        // Ensure user is authenticated
+        $user = Auth::user()->load('account');
+
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated.'], 401);
+        }
+
+        // Retrieve the user's account
+        $account = $user->account;
+
+        if (!$account) {
+            return response()->json(['error' => 'No account found for this user.'], 404);
+        }
+
+        // Debugging Logs
+        Log::info('Authenticated User:', [$user]);
+        Log::info('User Account:', [$user->account]);
+
         $validated = $request->validate([
             'type' => 'required|string',
             'brand' => 'required|string',
@@ -65,6 +87,30 @@ class EquipmentController extends Controller
             'registered_date' => $request->registered_date,
             'photo' => $photoPath, // ✅ Now assigned correctly
         ]);
+
+        // Get Admin Roles
+        $adminRoleUsers = User::where('role', 1)->get();
+
+        foreach ($adminRoleUsers as $adminRoleUser) {
+
+            // Check if account exists before accessing 'id'
+            if ($adminRoleUser->account) {
+                // Create Borrow Notification
+                BorrowNotification::create([
+                    'notified_to' => $adminRoleUser->account->id,
+                    'notified_by' => Auth::user()->account->id,
+                    'message' =>  ' requested a borrow equipment ' . $equipment->type,
+                    'data' => json_encode([
+                        'module_type' => get_class($equipment),
+                        'module_id' => $equipment->id,
+                        'is_read' => 0,
+                        'created_by' => Auth::id()
+                    ])
+                ]);
+            } else {
+                Log::warning('No account associated with admin user ID: ' . $adminRoleUser->id);
+            }
+        }
     
         return response()->json(['message' => 'Equipment created successfully!', 'data' => $equipment], 201);
     }    
@@ -115,6 +161,30 @@ class EquipmentController extends Controller
             'registered_date' => $request->registered_date,
             'photo' => $photoPath,
         ]);
+
+        // Get Admin Roles
+        $adminRoleUsers = User::where('role', 1)->get();
+
+        foreach ($adminRoleUsers as $adminRoleUser) {
+
+            // Check if account exists before accessing 'id'
+            if ($adminRoleUser->account) {
+                // Create Borrow Notification
+                BorrowNotification::create([
+                    'notified_to' => $adminRoleUser->account->id,
+                    'notified_by' => Auth::user()->account->id,
+                    'message' =>  ' you updated the equipment status ' . $equipment->property_number,
+                    'data' => json_encode([
+                        'module_type' => get_class($equipment),
+                        'module_id' => $equipment->id,
+                        'is_read' => 0,
+                        'created_by' => Auth::id()
+                    ])
+                ]);
+            } else {
+                Log::warning('No account associated with admin user ID: ' . $adminRoleUser->id);
+            }
+        }
     
         return response()->json(["message" => "Updated successfully", "data" => $equipment], 200);
     }    

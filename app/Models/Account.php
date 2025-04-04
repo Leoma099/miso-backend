@@ -26,4 +26,14 @@ class Account extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+
+    public function borrows()
+    {
+        return $this->hasMany(Borrow::class, 'account_id');
+    }
+
+    public function loggedBorrowNotifications()
+    {
+        return $this->hasMany(BorrowNotification::class, 'notified_to', 'id');
+    }
 }

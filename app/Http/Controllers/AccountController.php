@@ -40,7 +40,7 @@ class AccountController extends Controller
             'office_name' => 'required',
             'office_address' => 'required',
             'username' => 'required|unique:users',
-            'password' => 'required|min:6',
+            'password' => 'required',
         ]);
 
          // Create the user first
@@ -69,9 +69,15 @@ class AccountController extends Controller
         ]);
     }
 
-    public function show(Account $account)
+    public function show($id)
     {
-        return response()->json($account->load('user'));
+        $account = Account::find($id);
+
+        if (!$account) {
+            return response()->json(['error' => 'Account not found'], 404);
+        }
+
+        return response()->json($account);
     }
 
     public function update(Request $request, Account $account)
@@ -84,6 +90,17 @@ class AccountController extends Controller
     {
         $account->delete();
         return response()->json(['message' => 'Account deleted successfully']);
+    }
+
+    public function clientDataInfo()
+    {
+        $client = Account::with('user')
+        ->whereHas('user', function ($query) {
+            $query->where('role', 2);
+        })
+        ->get();
+
+        return response()->json($client);
     }
 }
 

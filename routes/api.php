@@ -8,6 +8,9 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\BorrowNotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +24,13 @@ use App\Http\Controllers\NotificationController;
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/department', [DepartmentController::class, 'index']);
+    Route::post('/department', [DepartmentController::class, 'store']);
+    Route::get('/department/{id}', [DepartmentController::class, 'show']);
+
+    Route::get('/calendar', [CalendarController::class, 'index']);
+    Route::post('/calendar', [CalendarController::class, 'store']);
+    Route::get('/calendar/{id}', [CalendarController::class, 'show']);
 
     Route::get('/equipment', [EquipmentController::class, 'index']);
     Route::get('/equipment/{id}', [EquipmentController::class, 'show']);
@@ -38,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/borrow/{id}', [BorrowController::class, 'update']);
     Route::delete('/borrow/{id}', [BorrowController::class, 'destroy']);
     Route::get('/borrow-statistics', [BorrowController::class, 'getBorrowStatistics']);
+    Route::get('/borrowRecord', [BorrowController::class, 'getRecordBorrower']);
+    Route::get('/borrowExport', [BorrowController::class, 'export']);
+    Route::get('/borrowCountDepartment', [BorrowController::class, 'numberOfDepartmentBorrow']);
 
 
     Route::get('/account', [AccountController::class, 'index']);
@@ -45,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/account', [AccountController::class, 'store']);
     Route::put('/account/{id}', [AccountController::class, 'update']);
     Route::delete('/account/{id}', [AccountController::class, 'destroy']);
+    Route::get('/accountClient', [AccountController::class, 'clientDataInfo']);
 
     Route::get('/user', [UserController::class, 'index']);
     Route::get('/user/{id}', [UserController::class, 'show']);
@@ -57,9 +71,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notification/mark-all-read', [UserController::class, 'markAllAsRead']);
     Route::put('/notification/read', [UserController::class, 'unread']);
 
+    Route::get('/borrow-notifications', [BorrowNotificationController::class, 'index']);
+    Route::get('/borrow-notifications/unread/count', [BorrowNotificationController::class, 'unreadCount']);
+    Route::get('/borrow-notification/{id}/read', [BorrowNotificationController::class, 'markAsRead']);
+
     Route::post('/logout', [AuthController::class, 'logout']);
 
 });
 
 // Login route (fixed with name)
 Route::post('login', [AuthController::class, 'login'])->name('login');
+
+Route::get('test/users', function()
+{
+    return \App\Models\Account::all();
+});
