@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->string('property_number');
             $table->string('position');
             $table->string('mobile_number');
-            $table->tinyInt('status');
+            $table->tinyInteger('status');
             $table->longText('purpose')->nullable();
             $table->date('date_borrow');
             $table->date('date_return')->nullable();

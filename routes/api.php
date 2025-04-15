@@ -12,6 +12,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\BorrowNotificationController;
 use App\Http\Controllers\DeliverRiderController;
+use App\Http\Controllers\BrandController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +25,14 @@ use App\Http\Controllers\DeliverRiderController;
 |
 */
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function ()
+{
+    Route::get('/brand', [BrandController::class, 'index']);
+    Route::post('/brand', [BrandController::class, 'store']);
+    Route::get('/brand/{id}', [BrandController::class, 'show']);
+    Route::put('/brand/{id}', [BrandController::class, 'update']);
+    Route::delete('/brand/{id}', [BrandController::class, 'destroy']);
+
     Route::get('/deliver-rider', [DeliverRiderController::class, 'index']);
     Route::post('/deliver-rider', [DeliverRiderController::class, 'store']);
     Route::get('/deliver-rider/{id}', [DeliverRiderController::class, 'show']);
@@ -64,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/borrowCountDepartment', [BorrowController::class, 'numberOfDepartmentBorrow']);
     Route::get('/borrowCountEquipment', [BorrowController::class, 'numberOfEquipmentBorrow']);
     Route::put('/borrow/{id}/return', [BorrowController::class, 'markAsReturned']);
+    Route::get('/borrowPending', [BorrowController::class, 'getPendingBorrow']);
 
     Route::get('/account', [AccountController::class, 'index']);
     Route::get('/account/{id}', [AccountController::class, 'show']);

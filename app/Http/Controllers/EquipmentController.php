@@ -61,6 +61,7 @@ class EquipmentController extends Controller
             'type' => 'required|string',
             'brand' => 'required|string',
             'model' => 'required|string',
+            'quantity' => 'required|integer',
             'equipmentStatus' => 'required|string',
             'property_number' => 'required|string',
             'serial_number' => 'required|string',
@@ -80,6 +81,7 @@ class EquipmentController extends Controller
             'type' => $request->type,
             'brand' => $request->brand,
             'model' => $request->model,
+            'quantity' => $request->quantity,
             'equipmentStatus' => $request->equipmentStatus,
             'photo' => $photoPath, // ✅ Now assigned correctly
         ]);
@@ -152,6 +154,7 @@ class EquipmentController extends Controller
             'type' => $request->type,
             'brand' => $request->brand,
             'model' => $request->model,
+            'quantity' => $request->quantity,
             'equipmentStatus' => $request->equipmentStatus,
             'photo' => $photoPath,
         ]);

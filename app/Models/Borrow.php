@@ -33,7 +33,7 @@ class Borrow extends Model
             'date',
         ];
 
-    public function Account()
+    public function account()
     {
         return $this->belongsTo(Account::class, 'account_id', 'id');
     }

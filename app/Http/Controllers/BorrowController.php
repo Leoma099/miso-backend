@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\Borrow;
+use App\Models\Department;
 use App\Models\Equipment;
 use App\Models\BorrowNotification;
 use App\Imports\BorrowImport;
@@ -460,7 +461,28 @@ class BorrowController extends Controller
         $borrow->save();
     
         return response()->json(['message' => 'Marked as returned']);
-    }    
-
+    }
+    
+    // List of Pending Equipment Borrow
+    public function getPendingBorrow()
+    {
+        try {
+            $pendingBorrows = Borrow::with(['equipment', 'account.user'])
+                ->where('status', 1) // Status 1 = Pending
+                ->get();
+    
+            return response()->json([
+                'message' => 'Pending borrows retrieved successfully.',
+                'data' => $pendingBorrows
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching pending borrows: ' . $e->getMessage());
+    
+            return response()->json([
+                'message' => 'Failed to retrieve pending borrows.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 };
