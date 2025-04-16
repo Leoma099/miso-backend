@@ -13,6 +13,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\BorrowNotificationController;
 use App\Http\Controllers\DeliverRiderController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\MyAccountController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,6 +81,8 @@ Route::middleware('auth:sanctum')->group(function ()
     Route::put('/account/{id}', [AccountController::class, 'update']);
     Route::delete('/account/{id}', [AccountController::class, 'destroy']);
     Route::get('/accountClient', [AccountController::class, 'clientDataInfo']);
+
+    Route::put('/accountUpdate', [MyAccountController::class, 'update']);
 
     Route::get('/user', [UserController::class, 'index']);
     Route::get('/user/{id}', [UserController::class, 'show']);

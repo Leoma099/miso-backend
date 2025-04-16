@@ -65,7 +65,7 @@ class EquipmentController extends Controller
             'equipmentStatus' => 'required|string',
             'property_number' => 'required|string',
             'serial_number' => 'required|string',
-            'photo' => 'nullable|image|max:2048',
+            'photo' => 'nullable|mimes:jpeg,png,jpg,gif,bmp,svg,webp,avif|max:10240', // max 10MB
         ]);
     
         // ✅ Store photo before inserting data

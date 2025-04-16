@@ -33,6 +33,9 @@ class AuthController extends Controller
             'office_address' => optional($user->account)->office_address,
             'mobile_number' => optional($user->account)->mobile_number,
             'position' => optional($user->account)->position,
+            'email' => optional($user->account)->email,
+            'address' => optional($user->account)->address,
+            'username' => $user->username,
             'role' => $user->role,
             'account' => $user->account ? ['id' => $user->account->id] : null, // Avoid null errors
         ], 200);

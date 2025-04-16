@@ -22,7 +22,7 @@ class CreateEquipmentTable extends Migration
             $table->longText('photo')->nullable();
             $table->string('property_number');
             $table->string('serial_number');
-            $table->string('equipmentSatus');
+            $table->string('equipmentStatus');
             $table->timestamps();
         });
     }
