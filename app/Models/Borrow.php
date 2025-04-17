@@ -20,6 +20,7 @@ class Borrow extends Model
             'type',
             'brand',
             'model',
+            'quantity',
             'property_number',
             'equipment',
             'position',

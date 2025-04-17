@@ -78,27 +78,31 @@ class BorrowController extends Controller
         Log::info('User Account:', [$user->account]);
 
         $request->validate([
-            'full_name' => 'required',
-            'id_number' => 'required',
-            'type' => 'required',
-            'brand' => 'required',
-            'model' => 'required',
-            'property_number' => 'required',
-            'office_name' => 'required',
-            'office_address' => 'required',
-            'position' => 'required',
-            'mobile_number' => 'required',
+            'full_name' => 'required|string',
+            'id_number' => 'required|string',
+            'type' => 'required|string',
+            'brand' => 'required|string',
+            'model' => 'required|string',
+            'quantity' => 'required|integer|min:1',
+            'property_number' => 'required|string',
+            'office_name' => 'required|string',
+            'office_address' => 'required|string',
+            'position' => 'required|string',
+            'mobile_number' => 'required|string',
             'date_borrow' => 'required|date',
             'date_return' => 'required|date|after_or_equal:date_borrow',
         ]);
 
+        $equipment = Equipment::where('property_number', $request->property_number)->first();
+
         $borrow = Borrow::create([
             'account_id' => $user->account->id,
-            'equipment_id' => $request->equipment_id, // FIXED LINE
+            'equipment_id' => $equipment->id, // FIXED LINE
             'full_name' => $request->full_name,
             'id_number' => $request->id_number,
             'type' => $request->type,
             'model' => $request->model,
+            'quantity' => $request->quantity,
             'property_number' => $request->property_number,
             'brand' => $request->brand,
             'office_name' => $request->office_name,
@@ -114,18 +118,14 @@ class BorrowController extends Controller
             'date' => $request->date,
         ]);
 
-        // Get Admin Roles
         $adminRoleUsers = User::where('role', 1)->get();
-
-        foreach ($adminRoleUsers as $adminRoleUser) {
-
-            // Check if account exists before accessing 'id'
+        foreach ($adminRoleUsers as $adminRoleUser)
+        {
             if ($adminRoleUser->account) {
-                // Create Borrow Notification
                 BorrowNotification::create([
                     'notified_to' => $adminRoleUser->account->id,
                     'notified_by' => Auth::user()->account->id,
-                    'message' => $borrow->full_name . ' requested a borrow equipment ' . $borrow->property_number,
+                    'message' => "{$borrow->full_name} requested a borrow equipment ({$borrow->property_number})",
                     'data' => json_encode([
                         'module_type' => get_class($borrow),
                         'module_id' => $borrow->id,
@@ -138,18 +138,14 @@ class BorrowController extends Controller
             }
         }
 
-        // Get Client Roles
         $clientRoleUsers = User::where('role', 2)->get();
-
-        foreach ($clientRoleUsers as $clientRoleUser) {
-
-            // Check if account exists before accessing 'id'
+        foreach ($clientRoleUsers as $clientRoleUser)
+        {
             if ($clientRoleUser->account) {
-                // Create Borrow Equipment Notification
                 BorrowNotification::create([
                     'notified_to' => $clientRoleUser->account->id,
                     'notified_by' => Auth::user()->account->id,
-                    'message' => 'you requested borrow equipment'  . $borrow->property_number ,
+                    'message' => "you requested borrow equipment ({$borrow->property_number})",
                     'data' => json_encode([
                         'module_type' => get_class($borrow),
                         'module_id' => $borrow->id,
@@ -167,45 +163,41 @@ class BorrowController extends Controller
 
     // Store a new borrow request (user submits request)
     public function storeWalkin(Request $request)
-    {
-        // Ensure user is authenticated
-        $user = Auth::user()->load('account');
-
-        if (!$user) {
-            return response()->json(['error' => 'User not authenticated.'], 401);
-        }
-
-        // Retrieve the user's account
-        $account = $user->account;
-
-        if (!$account) {
-            return response()->json(['error' => 'No account found for this user.'], 404);
-        }
-
-        // Debugging Logs
-        Log::info('Authenticated User:', [$user]);
-        Log::info('User Account:', [$user->account]);
-
+    {      
         $request->validate([
-            'full_name' => 'required',
-            'id_number' => 'required',
-            'type' => 'required',
-            'brand' => 'required',
-            'model' => 'required',
-            'property_number' => 'required',
-            'office_name' => 'required',
-            'office_address' => 'required',
-            'position' => 'required',
-            'mobile_number' => 'required',
+            'full_name' => 'required|string',
+            'id_number' => 'required|string',
+            'type' => 'required|string',
+            'brand' => 'required|string',
+            'model' => 'required|string',
+            'quantity' => 'required|integer|min:1',
+            'property_number' => 'required|string',
+            'office_name' => 'required|string',
+            'office_address' => 'required|string',
+            'position' => 'required|string',
+            'mobile_number' => 'required|string',
             'date_borrow' => 'required|date',
             'date_return' => 'required|date|after_or_equal:date_borrow',
         ]);
 
+        $equipment = Equipment::where('property_number', $request->property_number)->first();
+
+        if ($equipment) {
+            if ($equipment->quantity >= $request->quantity) {
+                $equipment->quantity -= $request->quantity;
+                $equipment->save();
+            } else {
+                return response()->json(['error' => 'Not enough stock available.'], 400);
+            }
+        }
+
         $borrow = Borrow::create([
+            'equipment_id' => $equipment->id, // FIXED LINE
             'full_name' => $request->full_name,
             'id_number' => $request->id_number,
             'type' => $request->type,
             'model' => $request->model,
+            'quantity' => $request->quantity,
             'property_number' => $request->property_number,
             'brand' => $request->brand,
             'office_name' => $request->office_name,
@@ -216,23 +208,23 @@ class BorrowController extends Controller
             'status' => 1,
             'date_borrow' => $request->date_borrow,
             'date_return' => $request->date_return,
-
             'agent' => $request->agent,
             'date' => $request->date,
         ]);
 
-        // Get Admin Roles
+        if ($equipment) {
+            $borrow->equipment_id = $equipment->id;
+            $borrow->save();
+        }
+
         $adminRoleUsers = User::where('role', 1)->get();
-
-        foreach ($adminRoleUsers as $adminRoleUser) {
-
-            // Check if account exists before accessing 'id'
+        foreach ($adminRoleUsers as $adminRoleUser)
+        {
             if ($adminRoleUser->account) {
-                // Create Borrow Notification
                 BorrowNotification::create([
                     'notified_to' => $adminRoleUser->account->id,
                     'notified_by' => Auth::user()->account->id,
-                    'message' => $borrow->full_name . ' requested a borrow equipment ' . $borrow->property_number,
+                    'message' => "{$borrow->full_name} requested to borrow equipment ({$borrow->property_number})",
                     'data' => json_encode([
                         'module_type' => get_class($borrow),
                         'module_id' => $borrow->id,
@@ -242,30 +234,6 @@ class BorrowController extends Controller
                 ]);
             } else {
                 Log::warning('No account associated with admin user ID: ' . $adminRoleUser->id);
-            }
-        }
-
-        // Get Client Roles
-        $clientRoleUsers = User::where('role', 2)->get();
-
-        foreach ($clientRoleUsers as $clientRoleUser) {
-
-            // Check if account exists before accessing 'id'
-            if ($clientRoleUser->account) {
-                // Create Borrow Equipment Notification
-                BorrowNotification::create([
-                    'notified_to' => $clientRoleUser->account->id,
-                    'notified_by' => Auth::user()->account->id,
-                    'message' => 'you requested borrow equipment'  . $borrow->property_number ,
-                    'data' => json_encode([
-                        'module_type' => get_class($borrow),
-                        'module_id' => $borrow->id,
-                        'is_read' => 0,
-                        'created_by' => Auth::id()
-                    ])
-                ]);
-            } else {
-                Log::warning('No account associated with admin user ID: ' . $clientRoleUser->id);
             }
         }
 
@@ -304,6 +272,26 @@ class BorrowController extends Controller
             'agent' => $request->agent,
             'date' => $request->date,
         ]);
+
+        $adminRoleUsers = User::where('role', 1)->get();
+        foreach ($adminRoleUsers as $adminRoleUser)
+        {
+            if ($adminRoleUser->account) {
+                BorrowNotification::create([
+                    'notified_to' => $adminRoleUser->account->id,
+                    'notified_by' => Auth::user()->account->id,
+                    'message' => "you update the borrow equipment ({$borrow->property_number})",
+                    'data' => json_encode([
+                        'module_type' => get_class($borrow),
+                        'module_id' => $borrow->id,
+                        'is_read' => 0,
+                        'created_by' => Auth::id()
+                    ])
+                ]);
+            } else {
+                Log::warning('No account associated with admin user ID: ' . $adminRoleUser->id);
+            }
+        }
         
         return response()->json(['message' => 'Borrow updated successfully']);
     }
@@ -311,7 +299,37 @@ class BorrowController extends Controller
     // Admin deletes a borrow record
     public function destroy($id)
     {
-        Borrow::findOrFail($id)->delete();
+        // Get the borrow record first
+        $borrow = Borrow::findOrFail($id);
+
+        // Store values before deletion
+        $propertyNumber = $borrow->property_number;
+        $borrowId = $borrow->id;
+        $borrowClass = get_class($borrow);
+
+        // Delete the record
+        $borrow->delete();
+
+        $adminRoleUsers = User::where('role', 1)->get();
+        foreach ($adminRoleUsers as $adminRoleUser)
+        {
+            if ($adminRoleUser->account) {
+                BorrowNotification::create([
+                    'notified_to' => $adminRoleUser->account->id,
+                    'notified_by' => Auth::user()->account->id,
+                    'message' => "You deleted the borrow equipment ({$propertyNumber})",
+                    'data' => json_encode([
+                        'module_type' => get_class($borrow),
+                        'module_id' => $borrow->id,
+                        'is_read' => 0,
+                        'created_by' => Auth::id()
+                    ])
+                ]);
+            } else {
+                Log::warning('No account associated with admin user ID: ' . $adminRoleUser->id);
+            }
+        }
+
         return response()->json(['message' => 'Borrow record deleted']);
     }
 
@@ -320,11 +338,15 @@ class BorrowController extends Controller
         // Count the borrows based on status (1 = Pending, 2 = Approved, 3 = Returned)
         $pendingCount = Borrow::where('status', 1)->count();
         $approvedCount = Borrow::where('status', 2)->count();
-        $returnedCount = Borrow::where('status', 3)->count();
+        $declinedCount = Borrow::where('status', 3)->count();
+        $recievedCount = Borrow::where('status', 4)->count();
+        $returnedCount = Borrow::where('status', 5)->count();
 
         return response()->json([
             'pending' => $pendingCount,
             'approved' => $approvedCount,
+            'declined' => $declinedCount,
+            'recieved' => $recievedCount,
             'returned' => $returnedCount,
         ]);
     }
@@ -426,7 +448,6 @@ class BorrowController extends Controller
         return response()->json($borrowCounts);
     }
 
-
     public function equipmentAvailable(Request $request, $id)
     {
         $borrow = Borrow::findOrFail($id);
@@ -446,7 +467,7 @@ class BorrowController extends Controller
 
     public function getReturnedBorrow()
     {
-        $returnedBorrowCount = Borrow::where('status', 3)->count(); // status 3 = Returned
+        $returnedBorrowCount = Borrow::where('status', 4)->count(); // status 4 = Returned
 
         return response()->json([
             'returned' => $returnedBorrowCount,
@@ -457,10 +478,10 @@ class BorrowController extends Controller
     public function markAsReturned($id)
     {
         $borrow = Borrow::findOrFail($id);
-        $borrow->status = 3; // 3 means Returned
+        $borrow->status = 4; // 4 means Returned
         $borrow->save();
     
-        return response()->json(['message' => 'Marked as returned']);
+        return response()->json(['message' => 'Marked as recieved']);
     }
     
     // List of Pending Equipment Borrow
@@ -483,6 +504,132 @@ class BorrowController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function approve($id)
+    {
+        $borrow = Borrow::findOrFail($id);
+
+        // Check if equipment has enough stock
+        $equipment = Equipment::where('property_number', $borrow->property_number)->first();
+        if (!$equipment || $equipment->quantity < $borrow->quantity) {
+            return response()->json(['error' => 'Not enough stock available.'], 400);
+        }
+
+        // Deduct the quantity
+        $equipment->quantity -= $borrow->quantity;
+        $equipment->save();
+
+        // Update the borrow status
+        $borrow->status = 2; // Approved
+        $borrow->save();
+
+        if($borrow->account_id)
+        {
+
+            BorrowNotification::create([
+                'notified_to' => $borrow->account_id,
+                'notified_by' => Auth::user()->account->id,
+                'message' => "Your borrow request ({$borrow->property_number}) has been approved.",
+                'data' => json_encode([
+                    'module_type' => get_class($borrow),
+                    'module_id' => $borrow->id,
+                    'is_read' => 0,
+                    'created_by' => Auth::id()
+                ])
+            ]);
+
+        }
+        else
+        {
+
+            $adminRoleUsers = User::where('role', 1)->get();
+            foreach ($adminRoleUsers as $admin)
+            {
+                if ($admin->account)
+                {
+                    BorrowNotification::create([
+                        'notified_to' => $admin->account->id,
+                        'notified_by' => Auth::user()->account->id ?? null,
+                        'message' => "You approved {$borrow->full_name} ID Number: ({$borrow->id_number}).",
+                        'data' => json_encode([
+                            'module_type' => get_class($borrow),
+                            'module_id' => $borrow->id,
+                            'is_read' => 0,
+                            'created_by' => Auth::id(),
+                            'borrower_name' => $borrow->full_name,
+                        ])
+                    ]);
+                }
+            }
+
+        }
+
+        return response()->json(['message' => 'Borrow request approved and quantity updated.']);
+    }
+
+    public function decline(Request $request, $id)
+    {
+        $borrow = Borrow::findOrFail($id);
+    
+        $borrow->status = 3; // 3 = Declined
+        $borrow->save();
+    
+        // Notify the user who requested the borrow
+        $notifiedTo = $borrow->account_id;
+    
+        if ($notifiedTo) {
+            BorrowNotification::create([
+                'notified_to' => $notifiedTo,
+                'notified_by' => Auth::user()->account->id ?? null,
+                'message' => "Your borrow request for {$borrow->property_number} has been declined.",
+                'data' => json_encode([
+                    'module_type' => get_class($borrow),
+                    'module_id' => $borrow->id,
+                    'is_read' => 0,
+                    'created_by' => Auth::id(),
+                ]),
+            ]);
+        }
+    
+        return response()->json([
+            'message' => 'Borrow request declined successfully.',
+            'borrow' => $borrow
+        ], 200);
+    }
+
+    public function returned(Request $request, $id)
+    {
+        $borrow = Borrow::findOrFail($id);
+    
+        // Update status to returned
+        $borrow->status = 5; // Returned
+        $borrow->save();
+    
+        // Return the equipment quantity back to inventory
+        $equipment = Equipment::where('property_number', $borrow->property_number)->first();
+        if ($equipment) {
+            $equipment->quantity += $borrow->quantity;
+            $equipment->save();
+        }
+    
+        // Notify the user
+        BorrowNotification::create([
+            'notified_to' => $borrow->account_id,
+            'notified_by' => Auth::user()->account->id,
+            'message' => "Your borrowed item ({$borrow->property_number}) has been marked as returned.",
+            'data' => json_encode([
+                'module_type' => get_class($borrow),
+                'module_id' => $borrow->id,
+                'is_read' => 0,
+                'created_by' => Auth::id(),
+            ])
+        ]);
+    
+        return response()->json([
+            'message' => 'Item successfully marked as returned and quantity updated.',
+            'borrow' => $borrow
+        ]);
     }
 
 };

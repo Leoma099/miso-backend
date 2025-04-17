@@ -18,10 +18,11 @@ return new class extends Migration {
             $table->string('type');
             $table->string('brand');
             $table->string('model');
+            $table->integer('quantity')->default(0);
             $table->string('property_number');
             $table->string('position');
             $table->string('mobile_number');
-            $table->tinyInteger('status');
+            $table->tinyInteger('status')->default(1);
             $table->longText('purpose')->nullable();
             $table->date('date_borrow');
             $table->date('date_return')->nullable();

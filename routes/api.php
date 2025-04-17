@@ -75,6 +75,10 @@ Route::middleware('auth:sanctum')->group(function ()
     Route::put('/borrow/{id}/return', [BorrowController::class, 'markAsReturned']);
     Route::get('/borrowPending', [BorrowController::class, 'getPendingBorrow']);
 
+    Route::put('/borrowApprove/{id}', [BorrowController::class, 'approve']);
+    Route::put('/borrowDecline/{id}', [BorrowController::class, 'decline']);
+    Route::put('/borrowReturn/{id}', [BorrowController::class, 'returned']);
+
     Route::get('/account', [AccountController::class, 'index']);
     Route::get('/account/{id}', [AccountController::class, 'show']);
     Route::post('/account', [AccountController::class, 'store']);
