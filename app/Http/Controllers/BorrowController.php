@@ -10,6 +10,7 @@ use App\Models\Equipment;
 use App\Models\BorrowNotification;
 use App\Imports\BorrowImport;
 use App\Exports\BorrowExport;
+use App\Exports\BorrowRecordExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -356,9 +357,9 @@ class BorrowController extends Controller
     {
         $query = Borrow::with(['equipment', 'account.user']);
     
-        if ($request->has('start_date') && $request->has('end_date')) {
-            $query->whereBetween('date_borrow', [$request->start_date, $request->end_date]);
-        }
+        if (!empty($request->date_borrow) && !empty($request->date_return)) {
+            $query->whereBetween('date_borrow', [$request->date_borrow, $request->date_return]);
+        }        
     
         if ($request->has('office_name') && !empty($request->office_name)) {
             $query->whereHas('account', function ($q) use ($request) {
@@ -414,6 +415,24 @@ class BorrowController extends Controller
     {
         return Excel::download(new BorrowExport, 'borrow-list.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
+
+    public function borrowRecordExport(Request $request)
+    {
+        $filters = $request->only([
+            'date_borrow',
+            'date_return',
+            'office_name',
+            'full_name',
+            'property_number',
+            'type',
+        ]);
+    
+        // Generate the filename with the current date
+        $filename = 'borrow-list-record-' . now()->format('Y-m-d') . '.xlsx';
+        
+        return Excel::download(new BorrowRecordExport($filters), $filename, \Maatwebsite\Excel\Excel::XLSX);
+    }
+    
 
     // Number of Department Borrow
     public function numberOfDepartmentBorrow()

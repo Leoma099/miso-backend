@@ -3,10 +3,13 @@
 namespace App\Exports;
 
 use App\Models\Borrow;
-use Illuminate\Contracts\View\View;
-use Maatwebsite\Excel\Concerns\FromView;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
 
-class BorrowRecordExport implements FromView
+class BorrowRecordExport implements FromCollection, WithHeadings, WithEvents
 {
     protected $filters;
 
@@ -15,10 +18,11 @@ class BorrowRecordExport implements FromView
         $this->filters = $filters;
     }
 
-    public function view(): View
+    public function collection(): Collection
     {
         $query = Borrow::with(['equipment', 'account.user']);
 
+        // Filtering
         if (!empty($this->filters['date_borrow']) && !empty($this->filters['date_return'])) {
             $query->whereBetween('date_borrow', [$this->filters['date_borrow'], $this->filters['date_return']]);
         }
@@ -47,6 +51,57 @@ class BorrowRecordExport implements FromView
 
         $records = $query->get();
 
-        return view('exports.borrow-records', ['records' => $records]);
+        // Format records for export
+        return $records->map(function ($record) {
+            return [
+                $record->account->id_number ?? 'N/A',
+                $record->account->full_name ?? 'N/A',
+                $record->account->office_name ?? 'N/A',
+                $record->account->position ?? 'N/A',
+                $record->account->office_address ?? 'N/A',
+                $record->account->mobile_number ?? 'N/A',
+                $record->equipment->type ?? 'N/A',
+                $record->status ?? 'N/A',
+                $record->equipment->brand ?? 'N/A',
+                $record->equipment->model ?? 'N/A',
+                $record->property_number ?? 'N/A',
+                $record->date_borrow,
+                $record->date_return,
+            ];
+        });
+    }
+
+    public function headings(): array
+    {
+        return [
+            'ID NUMBER',
+            'BORROWER NAME',
+            'DEPARTMENT',
+            'POSITION',
+            'DEPARTMENT ADDRESS',
+            'CONTACT #',
+            'EQUIPMENT TYPE',
+            'STATUS',
+            'BRAND',
+            'MODEL',
+            'PROPERTY NUMBER',
+            'DATE BORROW',
+            'DATE RETURN',
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $event->sheet->getStyle('A1:M1')->applyFromArray([
+                    'font' => ['bold' => true],
+                ]);
+
+                foreach (range('A', 'M') as $col) {
+                    $event->sheet->getDelegate()->getColumnDimension($col)->setAutoSize(true);
+                }
+            },
+        ];
     }
 }

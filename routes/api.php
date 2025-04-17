@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function ()
     Route::get('/borrowRecord', [BorrowController::class, 'getRecordBorrower']);
     Route::post('/borrowImport', [BorrowController::class, 'import']);
     Route::get('/borrowExport', [BorrowController::class, 'export']);
+    Route::get('/borrowRecordExport', [BorrowController::class, 'borrowRecordExport']);
     Route::get('/borrowCountDepartment', [BorrowController::class, 'numberOfDepartmentBorrow']);
     Route::get('/borrowCountEquipment', [BorrowController::class, 'numberOfEquipmentBorrow']);
     Route::put('/borrow/{id}/return', [BorrowController::class, 'markAsReturned']);
